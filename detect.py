@@ -4,10 +4,12 @@ import argparse
 import cv2
 import detect_utils
 from PIL import Image
+import os
+import torch.nn as nn
 
 # construct the argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', default='input/horses.jpg', help='path to input image/video')
+parser.add_argument('-i', '--input', default='input/000007.jpg', help='path to input image/video')
 parser.add_argument('-m', '--min-size', dest='min_size', default=800,
                     help='minimum input size for the FasterRCNN network')
 args = vars(parser.parse_args())
@@ -15,6 +17,15 @@ args = vars(parser.parse_args())
 # download or load the model from disk
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True,
                                                              min_size=args['min_size'])
+
+# 加载训练好的参数文件
+PATH = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
+try:
+    model = nn.DataParallel(model)
+    model.load_state_dict(torch.load(PATH,map_location='cpu'),False)
+    print("找到参数文件，加载参数预测！")
+except FileNotFoundError:
+    print("没有找到参数文件，采用原生模型预测！")
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

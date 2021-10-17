@@ -207,8 +207,9 @@ def main():
         if isinstance(leftEpoch, int):
             num_epochs = leftEpoch
         model.eval()
+        print("找到参数文件，开始接着训练！一共训练"+str(num_epochs)+"轮")
     except FileNotFoundError:
-        print("没有找到参数文件，重新开始训练！")
+        print("没有找到参数文件，重新开始训练！一共训练"+str(num_epochs)+"轮")
 
 
     for epoch in range(num_epochs):
