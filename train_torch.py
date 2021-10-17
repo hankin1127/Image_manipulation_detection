@@ -26,6 +26,7 @@ class HandDataset(object):
         self.imgs = list(sorted(os.listdir(os.path.join(root, "JPEGImages"))))
         self.masks = list(sorted(os.listdir(os.path.join(root, "Annotations"))))
 
+    # 取Dataset中的第idx个元素
     def __getitem__(self, idx):
         # load images ad masks
         img_path = os.path.join(self.root, "JPEGImages", self.imgs[idx])
@@ -35,6 +36,8 @@ class HandDataset(object):
         # because each color corresponds to a different instance
         # with 0 being background
         # masks = np.load(mask_path)
+
+        # 解析XML文件
         tree = ET.parse(mask_path)
         root = tree.getroot()
 
@@ -42,6 +45,7 @@ class HandDataset(object):
         # h, w = masks.shape
         # masks = masks.reshape(1, h, w)
 
+        # 假设每张训练的图中只有一个篡改物体
         num_objs = 1
         # boxes = []
         # for i in range(num_objs):
@@ -117,8 +121,10 @@ def get_model_instance_segmentation(num_classes):
 
 def get_transform(train):
     transforms = []
+    # transforms.ToTensor把数据处理成[0,1]，每个像素除255
     transforms.append(T.ToTensor())
     if train:
+        # 依据概率p对PIL图片进行水平翻转
         transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
 
@@ -155,7 +161,7 @@ def main():
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    # our dataset has two classes only - background and person
+    # our dataset has two classes only - background and 篡改物体
     num_classes = 2
     # use our dataset and defined transformations
     root_dir = os.path.join(os.getcwd(), 'data/DIY_dataset/VOC2007')
@@ -190,6 +196,21 @@ def main():
     # let's train it for 10 epochs
     num_epochs = 10
 
+    # 训练参数保存路径
+    checkPointPath = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
+    # 检查是否已经有训练参数，如有继续训练
+    try:
+        checkpoint = torch.load(checkPointPath)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        leftEpoch = checkpoint['leftEpoch']
+        if isinstance(leftEpoch, int):
+            num_epochs = leftEpoch
+        model.eval()
+    except FileNotFoundError:
+        print("没有找到参数文件，重新开始训练！")
+
+
     for epoch in range(num_epochs):
         # train for one epoch, printing every 10 iterations
         # train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
@@ -199,7 +220,7 @@ def main():
         # metric_logger = utils.MetricLogger(delimiter="  ")
         # metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
         # header = 'Epoch: [{}]'.format(epoch)
-
+        print("Epoch轮次：" + str(epoch) + "，开始=======")
         # for images, targets in metric_logger.log_every(data_loader, print_freq, header):
         for images, targets in data_loader:
             images = list(image.to(device) for image in images)
@@ -233,6 +254,15 @@ def main():
 
         # evaluate on the test dataset
         # evaluate(model, data_loader_test, device=device)
+
+        # 每个epoch保存一下参数
+        torch.save({
+            'leftEpoch': num_epochs - epoch -1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': losses,
+        }, checkPointPath)
+        print("Epoch轮次："+ str(epoch) +"，保存训练参数")
 
     print("That's it!")
 
