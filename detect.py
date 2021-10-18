@@ -6,17 +6,17 @@ import detect_utils
 from PIL import Image
 import os
 import torch.nn as nn
+from train_torch import get_model_instance_segmentation
 
 # construct the argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', default='input/000007.jpg', help='path to input image/video')
+parser.add_argument('-i', '--input', default='input/000016.jpg', help='path to input image/video')
 parser.add_argument('-m', '--min-size', dest='min_size', default=800,
                     help='minimum input size for the FasterRCNN network')
 args = vars(parser.parse_args())
 
-# download or load the model from disk
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True,
-                                                             min_size=args['min_size'])
+# 保持和训练的时候模型一致
+model = get_model_instance_segmentation(2)
 
 # 加载训练好的参数文件
 PATH = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
