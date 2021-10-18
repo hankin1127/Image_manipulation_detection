@@ -201,8 +201,14 @@ def main():
     # 检查是否已经有训练参数，如有继续训练
     try:
         checkpoint = torch.load(checkPointPath)
+        # 模型和优化器参数
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # loss存储列表
+        lossList = checkpoint['loss']
+        if not lossList:
+            lossList = []
+        # 剩余epoch数
         leftEpoch = checkpoint['leftEpoch']
         if isinstance(leftEpoch, int):
             num_epochs = leftEpoch
@@ -239,6 +245,8 @@ def main():
             # loss_value = losses_reduced.item()
             loss_value = losses.item()
             print(loss_value)
+            # 每次训练，记录模型的loss值
+            lossList.append(loss_value)
 
             if not math.isfinite(loss_value):
                 print("Loss is {}, stopping training".format(loss_value))
@@ -261,7 +269,7 @@ def main():
             'leftEpoch': num_epochs - epoch -1,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'loss': losses,
+            'loss': lossList,
         }, checkPointPath)
         print("Epoch轮次："+ str(epoch) +"，保存训练参数")
 
