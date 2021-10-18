@@ -15,7 +15,7 @@ import time
 # from engine import train_one_epoch, evaluate
 import utils
 import transforms as T
-
+import numpy as np
 
 class HandDataset(object):
     def __init__(self, root, transforms):
@@ -198,16 +198,19 @@ def main():
 
     # 训练参数保存路径
     checkPointPath = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
+    # 损失函数列表
+    lossList = []
     # 检查是否已经有训练参数，如有继续训练
     try:
-        checkpoint = torch.load(checkPointPath)
+        if(device.type == 'cpu'):
+            checkpoint = torch.load(checkPointPath, map_location='cpu')
+        else:
+            checkpoint = torch.load(checkPointPath)
         # 模型和优化器参数
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         # loss存储列表
         lossList = checkpoint['loss']
-        if not lossList:
-            lossList = []
         # 剩余epoch数
         leftEpoch = checkpoint['leftEpoch']
         if isinstance(leftEpoch, int):
@@ -229,6 +232,7 @@ def main():
         # header = 'Epoch: [{}]'.format(epoch)
         print("Epoch轮次：" + str(epoch) + "，开始=======")
         # for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+        i = 0
         for images, targets in data_loader:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
@@ -261,17 +265,18 @@ def main():
             if lr_scheduler is not None:
                 lr_scheduler.step()
 
-        # evaluate on the test dataset
-        # evaluate(model, data_loader_test, device=device)
 
-        # 每个epoch保存一下参数
-        torch.save({
-            'leftEpoch': num_epochs - epoch -1,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': lossList,
-        }, checkPointPath)
-        print("Epoch轮次："+ str(epoch) +"，保存训练参数")
+            if(i % 500 == 0):
+                # 每个500次训练保存一下参数
+                torch.save({
+                'leftEpoch': num_epochs - epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': lossList,
+                }, checkPointPath)
+                print("Epoch轮次：" + str(epoch) +"，第"+str(i)+ "次训练，保存训练参数")
+
+            i = i+1
 
     print("That's it!")
 

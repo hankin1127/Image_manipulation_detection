@@ -19,12 +19,16 @@ args = vars(parser.parse_args())
 
 # 保持和训练的时候模型一致
 model = get_model_instance_segmentation(2)
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 # 加载训练好的参数文件
 PATH = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
 try:
     model = nn.DataParallel(model)
-    checkpoint = torch.load(PATH, map_location='cpu')
+    if (device.type == 'cpu'):
+        checkpoint = torch.load(PATH, map_location='cpu')
+    else:
+        checkpoint = torch.load(PATH)
     model.load_state_dict(checkpoint,False)
     print("找到参数文件，加载参数预测！")
     # 展示训练中的loss变化
