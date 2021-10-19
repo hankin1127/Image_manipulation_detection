@@ -103,6 +103,7 @@ class HandDataset(object):
 
 def get_model_instance_segmentation(num_classes):
     # load an instance segmentation model pre-trained pre-trained on COCO
+    # pretrained=False 代表全部参数直接使用网络训练，pretrained=True采用预训练的模型训练
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False)
 
     # get number of input features for the classifier
