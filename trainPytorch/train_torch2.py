@@ -198,7 +198,8 @@ def main():
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-            loss_dict = model(images[0], targets)
+            newImages = images[0].unsqueeze(dim=0)
+            loss_dict = model(newImages, targets)
 
             losses = sum(loss for loss in loss_dict.values())
 
