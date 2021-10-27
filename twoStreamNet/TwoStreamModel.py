@@ -1,3 +1,4 @@
+import numpy as np
 from torchvision.models import resnet50
 import torch
 from twoStreamNet.SRM import SRMLayer
@@ -19,12 +20,12 @@ class TwoStreamModel(torch.nn.Module):
         # ROI POOLING
         # todo 此处初始化参数存疑
         output_size_roi = 7
-        self.roi = RoIPool(output_size = output_size_roi)
+        self.roi = RoIPool(output_size=output_size_roi, spatial_scale=5)
         # BilinearPooling
         # todo 此处初始化参数存疑
-        self.bilinearPooling = CompactBilinearPooling(input_dim1=output_size_roi, input_dim2=output_size_roi, output_dim=2)
+        self.bilinearPooling = CompactBilinearPooling(input_dim1=output_size_roi, input_dim2=output_size_roi, output_dim=2,cuda=False)
 
-    def forward(self, rgbImage):
+    def forward(self, rgbImage,targets):
         # 得到图像噪声残差
         noiseImage = self.srm.forward(rgbImage)
         # 原图和噪声图分别提取特征

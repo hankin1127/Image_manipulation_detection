@@ -13,7 +13,7 @@ class SRMLayer(nn.Module):
         self.bn = nn.BatchNorm1d(channel)
 
     def forward(self, x):
-        b, c, _, _ = x.size()
+        b, c, _ = x.size()
 
         # Style pooling
         mean = x.view(b, c, -1).mean(-1).unsqueeze(-1)
