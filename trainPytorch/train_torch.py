@@ -198,7 +198,7 @@ def main():
     num_epochs = 10
 
     # 训练参数保存路径
-    checkPointPath = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
+    checkPointPath = os.path.join(os.getcwd(), 'data/checkPoint/model_old2.pt')
     # 损失函数列表
     lossList = []
     # 检查是否已经有训练参数，如有继续训练

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 # construct the argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', default='input/000044.jpg', help='path to input image/video')
+parser.add_argument('-i', '--input', default='input/000009.jpg', help='path to input image/video')
 parser.add_argument('-m', '--min-size', dest='min_size', default=800,
                     help='minimum input size for the FasterRCNN network')
 args = vars(parser.parse_args())
@@ -22,7 +22,7 @@ model = get_model_instance_segmentation(2)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 # 加载训练好的参数文件
-PATH = os.path.join(os.getcwd(), 'data/checkPoint/model.pt')
+PATH = os.path.join(os.getcwd(), '../../data/checkPoint/model_old2.pt')
 try:
     model = nn.DataParallel(model)
     if (device.type == 'cpu'):
