@@ -136,10 +136,10 @@ def main():
 
     num_workers = 4  # Default to 4
     # define training and validation data loaders
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True,
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=True,
                                               num_workers=num_workers, collate_fn=utils.collate_fn)
 
-    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False,
+    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=2, shuffle=False,
                                                    num_workers=num_workers, collate_fn=utils.collate_fn)
 
     # B 模型准备与处理
@@ -183,26 +183,27 @@ def main():
 
     # D 开始训练
     for epoch in range(num_epochs):
-        # train for one epoch, printing every 10 iterations
-        # train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
 
-        # Train function integrate here.    ------------------------
         model.train()
-        # metric_logger = utils.MetricLogger(delimiter="  ")
-        # metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-        # header = 'Epoch: [{}]'.format(epoch)
         print("Epoch轮次：" + str(epoch) + "，开始=======")
-        # for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+
         i = 0
         for images, targets in data_loader:
-            images = list(image.to(device) for image in images)
+            # 处理参数
+            imagesList = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+            # list转化为Tensor
+            imageAll = torch.zeros(3, 4)
+            for index in range(imagesList.__len__()):
+                image = imagesList[index].unsqueeze(dim=0)
+                if index == 0:
+                    imageAll = image
+                else:
+                    imageAll = torch.cat([image, imageAll], dim=0)
 
-            newImages = images[0].unsqueeze(dim=0)
-            loss_dict = model(newImages, targets)
-
+            # 执行模型计算LOSS
+            loss_dict = model(imageAll, targets)
             losses = sum(loss for loss in loss_dict.values())
-
             loss_value = losses.item()
             print(loss_value)
             # 每次训练，记录模型的loss值
@@ -214,6 +215,7 @@ def main():
                 print(losses)
                 sys.exit(1)
 
+            # 优化调整
             optimizer.zero_grad()
             losses.backward()
             optimizer.step()
@@ -235,8 +237,6 @@ def main():
             i = i+1
 
     print("That's it!")
-
-    # with torch.no_grad():
 
 
 if __name__ == "__main__":

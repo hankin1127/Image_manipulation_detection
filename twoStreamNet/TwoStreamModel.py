@@ -31,6 +31,9 @@ class TwoStreamModel(torch.nn.Module):
         # 原图和噪声图分别提取特征
         rgbFeature = self.resnet50BackBone.forward(rgbImage)
         noiseFeature = self.resnet50BackBone.forward(noiseImage)
+        print(noiseImage.size())
+        print(rgbFeature.size())
+        print(noiseFeature.size())
         # 原图提取建议框
         classification_op, regression_op = self.rpn.forward(rgbFeature)
         # 获取ROI POOLING 后的特征
