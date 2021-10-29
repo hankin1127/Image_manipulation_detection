@@ -165,7 +165,7 @@ def main():
     # our dataset has two classes only - background and 篡改物体
     num_classes = 2
     # use our dataset and defined transformations
-    root_dir = os.path.join(os.getcwd(), 'data/DIY_dataset/VOC2007')
+    root_dir = os.path.join(os.path.dirname(os.getcwd()), 'data/DIY_dataset/VOC2007')
     dataset = HandDataset(root_dir, get_transform(train=True))
     dataset_test = HandDataset(root_dir, get_transform(train=False))
 
@@ -198,7 +198,7 @@ def main():
     num_epochs = 10
 
     # 训练参数保存路径
-    checkPointPath = os.path.join(os.getcwd(), 'data/checkPoint/model_old2.pt')
+    checkPointPath = os.path.join(os.path.dirname(os.getcwd()), 'data/checkPoint/model.pt')
     # 损失函数列表
     lossList = []
     # 检查是否已经有训练参数，如有继续训练
@@ -239,9 +239,9 @@ def main():
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
             loss_dict = model(images, targets)
-
+            print(loss_dict)
             losses = sum(loss for loss in loss_dict.values())
-
+            print(losses)
             # reduce losses over all GPUs for logging purposes
             # loss_dict_reduced = utils.reduce_dict(loss_dict)
             # losses_reduced = sum(loss for loss in loss_dict_reduced.values())

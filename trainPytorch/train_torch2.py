@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import time
 import utils
 import transforms as T
+from torchvision.transforms import transforms as F
 from twoStreamNet.TwoStreamModel import TwoStreamModel
 
 class HandDataset(object):
@@ -82,6 +83,8 @@ def get_transform(train):
     transforms = []
     # transforms.ToTensor把数据处理成[0,1]，每个像素除255
     transforms.append(T.ToTensor())
+    # 图像裁剪
+    transforms.append(T.CentreCorp(256))
     if train:
         # 依据概率p对PIL图片进行水平翻转
         transforms.append(T.RandomHorizontalFlip(0.5))
@@ -199,10 +202,12 @@ def main():
                 if index == 0:
                     imageAll = image
                 else:
-                    imageAll = torch.cat([image, imageAll], dim=0)
+                    imageAll = torch.cat([imageAll, image], dim=0)
 
             # 执行模型计算LOSS
-            loss_dict = model(imageAll, targets)
+            loss_tensor = model(imageAll, targets)
+            print(loss_tensor.size())
+
             losses = sum(loss for loss in loss_dict.values())
             loss_value = losses.item()
             print(loss_value)

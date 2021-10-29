@@ -47,3 +47,13 @@ class ToTensor(object):
     def __call__(self, image, target):
         image = F.to_tensor(image)
         return image, target
+
+class CentreCorp(object):
+    def __init__(self, newSize):
+        self.newSize = newSize
+
+    def __call__(self, image, target):
+        sizeList = []
+        sizeList.append(self.newSize)
+        image = F.center_crop(image,sizeList)
+        return image, target
