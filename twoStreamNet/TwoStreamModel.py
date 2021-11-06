@@ -6,6 +6,7 @@ from twoStreamNet.Rpn import RegionProposalNetwork
 from torchvision.ops.roi_pool import RoIPool
 from twoStreamNet.CompactBilinearPooling import CompactBilinearPooling
 from torchvision.models.feature_extraction import create_feature_extractor
+from twoStreamNet.Bbox_loss import compute_rpn_bbox_loss
 from twoStreamNet.Utils import dictToOneTensor
 
 m = resnet50()
@@ -34,21 +35,28 @@ class TwoStreamModel(torch.nn.Module):
         self.roi = RoIPool(output_size=7, spatial_scale=5)
         # BilinearPooling
         self.bilinearPooling = CompactBilinearPooling(input_dim1=2048, input_dim2=2048, output_dim=1,cuda=False)
+        # LOSS temper
+        self.lossTemper = torch.nn.CrossEntropyLoss()
 
     def forward(self, rgbImage,targets):
+        print(rgbImage.size())
+        print(targets)
         # 1 得到图像噪声残差
         noiseImage = self.srm.forward(rgbImage)
-
+        print(noiseImage.size())
         # 2 原图和噪声图分别提取特征
         rgbFeature = self.resnet50BackBone.forward(rgbImage)
         noiseFeature = self.resnet50BackBone.forward(noiseImage)
-
+        print(rgbFeature['3'].size())
+        print(noiseFeature['3'].size())
         # 3 原图提取建议框 此处取最高维度的特征图[2, 2048, 8, 8]
         classification_op, regression_op = self.rpn.forward(rgbFeature['3'])
         # 3.1 将两种特征融合
         classification_op = classification_op.unsqueeze(dim=1)
         rpnResult = torch.cat([classification_op, regression_op], dim=1)
         print(rpnResult.size())
+        # 3.2 计算bboxLoss
+        bboxLoss = compute_rpn_bbox_loss()
 
         # 4 获取ROI POOLING 后的特征
         noiseRoiFeature = self.roi.forward(noiseFeature['3'], rpnResult)
@@ -57,6 +65,9 @@ class TwoStreamModel(torch.nn.Module):
         print(rgbRoiFeature.size())
 
         # 5 双线性池化
-        output = self.bilinearPooling.forward(rgbRoiFeature,noiseRoiFeature)
-        print(output.size())
-        return output
+        bilinearPoolingOutput = self.bilinearPooling.forward(rgbRoiFeature,noiseRoiFeature)
+        print(bilinearPoolingOutput.size())
+        # 5.1 计算LOSS tamper(为什么想到用这个交叉熵损失函数)
+        loss_temper = self.lossTemper.forward(bilinearPoolingOutput,torch.ones(192,targets[0]['labels']))
+        print(loss_temper)
+        return loss_temper

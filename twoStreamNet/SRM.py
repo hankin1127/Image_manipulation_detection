@@ -16,13 +16,13 @@ class SRMLayer(nn.Module):
         b, c, _, _ = x.size()
 
         # Style pooling
-        mean = x.view(b, c, -1).mean(-1).unsqueeze(-1)
-        std = x.view(b, c, -1).std(-1).unsqueeze(-1)
+        mean = x.contiguous().view(b, c, -1).mean(-1).unsqueeze(-1)
+        std = x.contiguous().view(b, c, -1).std(-1).unsqueeze(-1)
         u = torch.cat((mean, std), -1)  # (b, c, 2)
 
         # Style integration
         z = self.cfc(u)  # (b, c, 1)
-        z = self.bn(z)
+        # z = self.bn(z)
         g = torch.sigmoid(z)
         g = g.view(b, c, 1, 1)
 

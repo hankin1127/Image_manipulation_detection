@@ -53,6 +53,7 @@ class HandDataset(object):
         #     boxes.append([xmin, ymin, xmax, ymax])
 
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        print(boxes)
         # there is only one class
         labels = torch.ones((num_objs,), dtype=torch.int64)
         # masks = torch.as_tensor(masks, dtype=torch.uint8)
@@ -139,10 +140,10 @@ def main():
 
     num_workers = 4  # Default to 4
     # define training and validation data loaders
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=True,
+    data_loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True,
                                               num_workers=num_workers, collate_fn=utils.collate_fn)
 
-    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=2, shuffle=False,
+    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False,
                                                    num_workers=num_workers, collate_fn=utils.collate_fn)
 
     # B 模型准备与处理
@@ -208,7 +209,7 @@ def main():
             loss_tensor = model(imageAll, targets)
             print(loss_tensor.size())
 
-            losses = sum(loss for loss in loss_dict.values())
+            losses = sum(loss for loss in loss_tensor.values())
             loss_value = losses.item()
             print(loss_value)
             # 每次训练，记录模型的loss值
