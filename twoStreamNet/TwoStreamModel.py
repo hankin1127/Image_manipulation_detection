@@ -56,7 +56,7 @@ class TwoStreamModel(torch.nn.Module):
         rpnResult = torch.cat([classification_op, regression_op], dim=1)
         print(rpnResult.size())
         # 3.2 计算bboxLoss
-        bboxLoss = compute_rpn_bbox_loss()
+        # bboxLoss = compute_rpn_bbox_loss()
 
         # 4 获取ROI POOLING 后的特征
         noiseRoiFeature = self.roi.forward(noiseFeature['3'], rpnResult)
@@ -66,8 +66,9 @@ class TwoStreamModel(torch.nn.Module):
 
         # 5 双线性池化
         bilinearPoolingOutput = self.bilinearPooling.forward(rgbRoiFeature,noiseRoiFeature)
+        bilinearPoolingOutput = torch.reshape(bilinearPoolingOutput, (1, 192))
         print(bilinearPoolingOutput.size())
         # 5.1 计算LOSS tamper(为什么想到用这个交叉熵损失函数)
-        loss_temper = self.lossTemper.forward(bilinearPoolingOutput,torch.ones(192,targets[0]['labels']))
+        loss_temper = self.lossTemper.forward(bilinearPoolingOutput,targets[0]['labels'])
         print(loss_temper)
         return loss_temper
